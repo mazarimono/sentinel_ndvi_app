@@ -97,4 +97,4 @@ def update_data(n_clicks, lat_input, lon_input):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, host=(0, 0, 0, 0))
+    app.run_server(debug=True, host=(0.0.0.0))

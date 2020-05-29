@@ -2,7 +2,7 @@
 
 - まずディレクトリを取得し、そのディレクトリに移動します。
 
-    $ git clone https://github.com/mazarimono/sentinel_ndvi_app.git
+    $ git clone https://github.com/mazarimono/sentinel_ndvi_app.git    
     $ cd sentinel_ndvi_app
 
 次にapp.pyの上にあるarc_passに自身のArcGISのIDとSecretをコピペします。

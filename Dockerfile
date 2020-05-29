@@ -5,7 +5,7 @@ RUN apt-get update
 RUN mkdir /work
 WORKDIR /work  
 
-RUN pip install --update pip  
+RUN pip install --upgrade pip  
 RUN pip install dash requests pandas plotly 
 
 COPY app.py /work

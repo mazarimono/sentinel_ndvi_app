@@ -13,6 +13,17 @@
         "ClientSecret": YourSecret, <-- 自身のパスワードを入力
         }
 
+## ローカル環境で動かす
+
+必要なライブラリをpip install して、app.pyを動かします。
+
+    $ pip install -r requirements.txt 
+    $ python app.py
+
+ブラウザで http://localhost:8050/ にアクセスすると、アプリにアクセスできます。 
+
+## Dockerで動かす
+
 次にDockerのイメージを作成します。    
      
     $ docker build -t sagri-app .

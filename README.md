@@ -19,7 +19,8 @@
 
 Dockerコンテナを起動します。
 
-    $ docker run --rm -it -v $(pwd):/work -P -p 8050:8050 sagri-app python app.py 
+    $ docker run --rm -it -v $(pwd):/work -P -p 8050:8050 sagri-app python app.py (mac)
+    $ docker run --rm -it -v $(pwd):/work -P -p 8050:8050 sagri-app python app.py (win)
 
 ブラウザで http://localhost:8050/ にアクセスすると、アプリにアクセスできます。    
      

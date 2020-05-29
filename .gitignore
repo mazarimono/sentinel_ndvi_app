@@ -137,8 +137,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Memo
-*.md 
 
 # password-memo
 passport.py 

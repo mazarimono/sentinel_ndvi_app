@@ -4,7 +4,7 @@ from datetime import date, timedelta
 import pandas as pd
 import requests
 
-
+# ID, SECRETからトークンを生成する
 def _gen_token(client_id, client_secret):
     base_path = "https://www.arcgis.com/sharing/rest/oauth2/token"
     params = {
@@ -17,7 +17,7 @@ def _gen_token(client_id, client_secret):
     token = r.json()["access_token"]
     return token
 
-
+# センチネルのAPIからサンプルデータを取得する
 def _get_sentinel_data(arcgis_token, field_center, satellite_date):
     base_path = "https://sentinel.arcgis.com/arcgis/rest/services/Sentinel2/ImageServer/getSamples"
     params = urllib.parse.urlencode(
@@ -41,41 +41,78 @@ def _get_sentinel_data(arcgis_token, field_center, satellite_date):
     data = r.json()
     return data
 
-
+# センチネルAPIからデータを取得し、データフレーム化する。
 def get_from_sentinel(client_id, client_secret, field_center, satellite_date):
-
+    """
+    センチネルAPIからデータを取得し、データフレーム化する
+    今のところ、15カ月分くらいの日付文を
+    """
     arcgis_token = _gen_token(client_id, client_secret)
-    sample_data = _get_sentinel_data(arcgis_token, field_center, satellite_date)
-    band_data = sample_data["samples"][0]["value"].split(" ")
-    band_data = map((lambda x: int(x)), band_data)
-    df = pd.DataFrame(band_data).T
-    df.index = [satellite_date]
-    df.columns = [
-        "band1",
-        "band2",
-        "band3",
-        "band4",
-        "band5",
-        "band6",
-        "band7",
-        "band8",
-        "band8a",
-        "band9",
-        "band10",
-        "band11",
-        "band12",
-    ]
-    df["NDVI"] = (df["band8"] - df["band4"]) / (df["band8"] + df["band4"])
-    return df
+
+    dff = pd.DataFrame()
+
+    for d in satellite_date:
+        sample_data = _get_sentinel_data(arcgis_token, field_center, d)
+        band_data = sample_data["samples"][0]["value"].split(" ")
+        band_data = map((lambda x: int(x)), band_data)
+        df = pd.DataFrame(band_data).T
+        df.index = [d]
+        df.columns = [
+            "band1",
+            "band2",
+            "band3",
+            "band4",
+            "band5",
+            "band6",
+            "band7",
+            "band8",
+            "band8a",
+            "band9",
+            "band10",
+            "band11",
+            "band12",
+        ]
+        df["NDVI"] = (df["band8"] - df["band4"]) / (df["band8"] + df["band4"])
+        # バンドデータ以外の取得
+        return_location_data_x = sample_data["samples"][0]["location"]["x"] # 返り値X
+        return_location_data_y = sample_data["samples"][0]["location"]["y"] # 返り値X
+        raster_id = sample_data["samples"][0]["rasterId"]
+        resolution = sample_data["samples"][0]["resolution"]
+        location_id = sample_data["samples"][0]["locationId"]
+        field_center_x = field_center[0][0]
+        field_center_y = field_center[0][1]
+
+        df["返り値x"] = return_location_data_x
+        df["返り値y"] = return_location_data_y 
+        df["RasterID"] = raster_id 
+        df["resolution"] = resolution 
+        df["locationID"] = location_id 
+        df["要求x"] = field_center_x
+        df["要求y"] = field_center_y 
+
+        dff = pd.concat([dff, df])
+    
+    dff.index = pd.to_datetime(dff.index)
+    
+    return dff
 
 
 def make_graph_data(df):
+    """
+    コラムにデータの種類を持つデータフレームを引数に渡すと、
+    NDVI値のみのデータフレーム作成
+    """
     df = df[["NDVI"]]
     df = df.reset_index()
     return df
 
 
 def make_date():
+    """
+    当日を基準に、28日ずつ日付を前に戻って
+    作成する。
+    15カ月分くらい作成される
+    """
     today = date.today()
     date_box = []
     for i in range(17):

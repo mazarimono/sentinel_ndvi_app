@@ -2,6 +2,9 @@
 api_test*.ipynb 
 Untitled*.ipynb 
 
+# VSCODE CONFIG
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

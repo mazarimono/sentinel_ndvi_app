@@ -1,4 +1,5 @@
 import json
+import os 
 
 import dash
 import dash_core_components as dcc
@@ -10,12 +11,15 @@ from dash.dependencies import Input, Output, State
 
 import sen_req
 
+# ID名とシークレットの入力
 arc_pass = {
-    "ClientID": user_id,
-    "ClientSecret": user_secret,
+    "ClientID": yourid,
+    "ClientSecret": yoursecret,
 }
-# つくば市
-# 緯度　36.0835 ; lat,　経度 140.0764 ; lon
+
+# トークンの生成
+arcgis_token = sen_req.gen_token(arc_pass["ClientID"], arc_pass["ClientSecret"])
+
 
 """
 経度緯度からAPIをたたき、それを可視化するアプリケーション。
@@ -27,6 +31,7 @@ half_style = {"width": "43%", "margin": "1%", "display": "inline-block", "vertic
 
 app = dash.Dash(__name__)
 
+server = app.server 
 
 app.layout = html.Div(
     [
@@ -93,7 +98,7 @@ def update_data(n_clicks, lat_input, lon_input):
         # 日付はまずは、13か月分を取得するようにするどのように作るか？
         date_box = sen_req.make_date()
 
-        dff = sen_req.get_from_sentinel(arc_pass["ClientID"], arc_pass["ClientSecret"], field_center, date_box)
+        dff = sen_req.get_from_sentinel(arcgis_token, field_center, date_box)
         dff = dff.sort_index(ascending=True)
         dff = dff.reset_index()
         
@@ -108,6 +113,7 @@ def update_data(n_clicks, lat_input, lon_input):
         dff_dict = dff.to_dict('records')
 
         return my_graph,my_table,dff_dict
+
 
 @app.callback(Output("show_graph", "figure"), [Input("session_storage", "data")],prevent_initial_call=True)
 def use_storage(data):

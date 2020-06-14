@@ -1,11 +1,12 @@
 import urllib.request
 from datetime import date, timedelta
+import time 
 
 import pandas as pd
 import requests
 
 # ID, SECRETからトークンを生成する
-def _gen_token(client_id, client_secret):
+def gen_token(client_id, client_secret):
     base_path = "https://www.arcgis.com/sharing/rest/oauth2/token"
     params = {
         "client_id": client_id,
@@ -42,13 +43,14 @@ def _get_sentinel_data(arcgis_token, field_center, satellite_date):
     return data
 
 # センチネルAPIからデータを取得し、データフレーム化する。
-def get_from_sentinel(client_id, client_secret, field_center, satellite_date):
+def get_from_sentinel(arcgis_token, field_center, satellite_date):
     """
     センチネルAPIからデータを取得し、データフレーム化する
     今のところ、15カ月分くらいの日付文を
+    field_centerは[[緯度, 経度]]の形で入力
+    satellite_dateは["YYYY-MM-DD"]の形
     """
-    arcgis_token = _gen_token(client_id, client_secret)
-
+    
     dff = pd.DataFrame()
 
     for d in satellite_date:
@@ -93,6 +95,8 @@ def get_from_sentinel(client_id, client_secret, field_center, satellite_date):
         dff = pd.concat([dff, df])
     
     dff.index = pd.to_datetime(dff.index)
+    dff = dff.sort_index(ascending=True)
+    dff = dff.reset_index()
     
     return dff
 
@@ -107,16 +111,21 @@ def make_graph_data(df):
     return df
 
 
-def make_date():
+def make_date(days=28):
     """
-    当日を基準に、28日ずつ日付を前に戻って
-    作成する。
-    15カ月分くらい作成される
+    当日を基準に、daysずつ日付を前に戻って
+    作成する。初期設定は28日。
+    15カ月分くらい作成される(480日)
     """
     today = date.today()
+    step_num = 480 // days
     date_box = []
-    for i in range(17):
-        new_date = today - timedelta(28) * i
+    for i in range(step_num):
+        new_date = today - timedelta(days) * i
         new_date = f"{new_date.year}-{new_date.month}-{new_date.day}"
         date_box.append(new_date)
     return date_box
+
+# 7日刻みでデータを取得すると420秒
+# 28日刻みだと22秒
+# 14日だと63秒
